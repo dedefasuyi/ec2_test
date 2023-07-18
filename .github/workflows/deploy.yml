@@ -1,0 +1,32 @@
+
+name: Terraform 
+on:
+  workflow_dispatch:
+    inputs:
+      ec2-name:
+        description: EC2 name
+        required: true
+        default: 'ec2 name'
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup Terraform
+      run: |
+        VERSION=$(curl --silent https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r .current_version)
+        wget https://releases.hashicorp.com/terraform/$VERSION/terraform_${VERSION}_linux_amd64.zip
+        unzip terraform_${VERSION}_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/
+    - name: Terraform init
+      run: terraform init
+    - name: Terraform plan
+      run: terraform plan 
+    - name: Terraform apply
+      run: terraform apply -auto-approve
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
